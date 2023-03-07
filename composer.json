@@ -21,6 +21,6 @@
   },
   "require": {
     "php": ">=7.4",
-    "evolutionphp/logger":">=1.0"
+    "evolutionphp/logger":">=1.1"
   }
 }

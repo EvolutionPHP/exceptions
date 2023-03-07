@@ -73,8 +73,12 @@ class Exceptions {
 	 */
 	public function add_logger($config)
 	{
-		$this->use_logger = true;
-		$this->logger = new Log($config);
+		try{
+			$this->logger = new Log($config);
+			$this->use_logger = true;
+		}catch (\Exception $exception){
+			throw new \Exception($exception->getMessage());
+		}
 	}
 
 	public function write_log($level, $message)
