@@ -1,0 +1,26 @@
+{
+  "name": "evolutionphp/exceptions",
+  "description": "Simple PHP error handler and logger.",
+  "license": "MIT",
+  "type": "library",
+  "keywords": [
+    "php",
+    "exceptions",
+    "errors"
+  ],
+  "authors": [
+    {
+      "name": "Andres Mendoza",
+      "homepage": "https://twitter.com/EvolutionPHP"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "EvolutionPHP\\Exceptions\\": "src"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "evolutionphp/logger":">=1.0"
+  }
+}
