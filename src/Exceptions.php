@@ -1,6 +1,10 @@
 <?php
 namespace EvolutionPHP\Exceptions;
 use EvolutionPHP\Logger\Log;
+use Symfony\Component\ErrorHandler\Debug;
+use Symfony\Component\ErrorHandler\ErrorHandler;
+use Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer;
+use Symfony\Component\ErrorHandler\Exception\FlattenException;
 
 define('EvolutionPHPExceptions', 1);
 
@@ -22,6 +26,7 @@ class Exceptions {
 	 */
 	private $logger;
 
+	private $debug;
 	/**
 	 * List of available error levels
 	 *
@@ -88,9 +93,10 @@ class Exceptions {
 		}
 	}
 
-	public function register($debug=true)
+	public function register(bool $debug=true)
 	{
-		if($debug === true){
+		$this->debug = $debug;
+		if($this->debug === true){
 			error_reporting(-1);
 			ini_set('display_errors', 1);
 		}else{
@@ -208,32 +214,9 @@ class Exceptions {
 
 	public function show_exception($exception)
 	{
-		$templates_path = __DIR__.DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR;
-		$message = $exception->getMessage();
-		if (empty($message))
-		{
-			$message = '(null)';
-		}
-
-		if ($this->is_cli())
-		{
-			$templates_path .= 'cli'.DIRECTORY_SEPARATOR;
-		}
-		else
-		{
-			$templates_path .= 'html'.DIRECTORY_SEPARATOR;
-		}
-
-		if (ob_get_level() > $this->ob_level + 1)
-		{
-			ob_end_flush();
-		}
-
-		ob_start();
-		include($templates_path.'error_exception.php');
-		$buffer = ob_get_contents();
-		ob_end_clean();
-		echo $buffer;
+		$message = new HtmlErrorRenderer(true);
+		$render = $message->render($exception);
+		echo $render->getAsString();
 	}
 
 	// --------------------------------------------------------------------
@@ -250,36 +233,11 @@ class Exceptions {
 	public function show_php_error($severity, $message, $filepath, $line)
 	{
 
-		$templates_path = __DIR__.DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR;
-
-		$severity = isset($this->levels[$severity]) ? $this->levels[$severity] : $severity;
-
-		// For safety reasons we don't show the full file path in non-CLI requests
-		if ( ! $this->is_cli())
-		{
-			$filepath = str_replace('\\', '/', $filepath);
-			if (FALSE !== strpos($filepath, '/'))
-			{
-				$x = explode('/', $filepath);
-				$filepath = $x[count($x)-2].'/'.end($x);
-			}
-
-			$template = 'html'.DIRECTORY_SEPARATOR.'error_php';
-		}
-		else
-		{
-			$template = 'cli'.DIRECTORY_SEPARATOR.'error_php';
-		}
-
-		if (ob_get_level() > $this->ob_level + 1)
-		{
-			ob_end_flush();
-		}
-		ob_start();
-		include($templates_path.$template.'.php');
-		$buffer = ob_get_contents();
-		ob_end_clean();
-		echo $buffer;
+		$exception = new \ErrorException($message, 0 , $severity, $filepath, $line);
+		$message = new HtmlErrorRenderer(true);
+		$render = $message->render($exception);
+		$content = $render->getAsString();
+		echo $content;
 	}
 
 	public function set_status_header($code = 200, $text = '')
@@ -291,7 +249,13 @@ class Exceptions {
 
 		if (empty($code) OR ! is_numeric($code))
 		{
-			$this->show_error('Status codes must be numeric', 500);
+			$message = 'Status codes must be numeric';
+			if($this->debug){
+				echo $this->show_error('Status codes must be numeric', 500);
+				exit(1);
+			}else{
+				$this->write_log('error', $message);
+			}
 		}
 
 		if (empty($text))
@@ -356,7 +320,13 @@ class Exceptions {
 			}
 			else
 			{
-				$this->show_error('No status text available. Please check your status code number or supply your own message text.', 500);
+				$message = 'No status text available. Please check your status code number or supply your own message text.';
+				if($this->debug){
+					echo $this->show_error($message, 500);
+					exit(1);
+				}else{
+					$this->write_log('error', $message);
+				}
 			}
 		}
 

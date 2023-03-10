@@ -1,5 +1,6 @@
 <?php
 include __DIR__.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+\Symfony\Component\ErrorHandler\ErrorHandler::register();
 //Initialize class
 $exceptions = new \EvolutionPHP\Exceptions\Exceptions();
 
@@ -16,7 +17,7 @@ $exceptions->add_logger([
 $instance = \EvolutionPHP\Exceptions\Exceptions::instance();
 
 //Set status header
-$instance->set_status_header(500);
+//$instance->set_status_header(500);
 
 //Write log message
 $instance->write_log('error','This is error message');
@@ -28,9 +29,11 @@ if($instance->is_cli()){
 	echo 'Welcome to our site.';
 }
 
+
+
 //Testing exceptions
 function sum(int $a, int $b){
 	return $a+$b;
 }
-
+var_dump(str_contains("foobar", null));
 echo sum(4,'ab');
