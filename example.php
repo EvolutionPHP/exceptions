@@ -17,7 +17,7 @@ $exceptions->add_logger([
 $instance = \EvolutionPHP\Exceptions\Exceptions::instance();
 
 //Set status header
-//$instance->set_status_header(500);
+$instance->set_status_header(500);
 
 //Write log message
 $instance->write_log('error','This is error message');

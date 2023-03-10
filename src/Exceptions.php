@@ -27,6 +27,8 @@ class Exceptions {
 	private $logger;
 
 	private $debug;
+
+	private $sent_header = false;
 	/**
 	 * List of available error levels
 	 *
@@ -214,9 +216,25 @@ class Exceptions {
 
 	public function show_exception($exception)
 	{
-		$message = new HtmlErrorRenderer(true);
-		$render = $message->render($exception);
-		echo $render->getAsString();
+		if($this->is_cli()){
+			$message = $exception->getMessage();
+			$templates_path = __DIR__.DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR;
+			$template = 'cli'.DIRECTORY_SEPARATOR.'error_php';
+			if (ob_get_level() > $this->ob_level + 1)
+			{
+				ob_end_flush();
+			}
+			ob_start();
+			include($templates_path.$template.'.php');
+			$buffer = ob_get_contents();
+			ob_end_clean();
+			echo $buffer;
+		}else{
+			$message = new HtmlErrorRenderer(true);
+			$render = $message->render($exception);
+			echo $render->getAsString();
+		}
+
 	}
 
 	// --------------------------------------------------------------------
@@ -232,12 +250,27 @@ class Exceptions {
 	 */
 	public function show_php_error($severity, $message, $filepath, $line)
 	{
+		if($this->is_cli()){
+			$templates_path = __DIR__.DIRECTORY_SEPARATOR.'pages'.DIRECTORY_SEPARATOR;
+			$template = 'cli'.DIRECTORY_SEPARATOR.'error_php';
+			if (ob_get_level() > $this->ob_level + 1)
+			{
+				ob_end_flush();
+			}
+			ob_start();
+			include($templates_path.$template.'.php');
+			$buffer = ob_get_contents();
+			ob_end_clean();
+			echo $buffer;
+		}else{
+			$exception = new \ErrorException($message, 0 , $severity, $filepath, $line);
+			$message = new HtmlErrorRenderer(true);
+			$render = $message->render($exception);
+			$content = $render->getAsString();
+			echo $content;
+		}
 
-		$exception = new \ErrorException($message, 0 , $severity, $filepath, $line);
-		$message = new HtmlErrorRenderer(true);
-		$render = $message->render($exception);
-		$content = $render->getAsString();
-		echo $content;
+
 	}
 
 	public function set_status_header($code = 200, $text = '')
@@ -246,7 +279,10 @@ class Exceptions {
 		{
 			return;
 		}
-
+		if($this->sent_header){
+			return;
+		}
+		$this->sent_header = true;
 		if (empty($code) OR ! is_numeric($code))
 		{
 			$message = 'Status codes must be numeric';
@@ -355,10 +391,7 @@ class Exceptions {
 		// it is only called when the display_errors flag is set (which isn't usually
 		// the case in a production environment) or when errors are ignored because
 		// they are above the error_reporting threshold.
-		if ($is_error)
-		{
-			$this->set_status_header(500);
-		}
+
 
 		// Should we ignore the error? We'll get the current error_reporting
 		// level and add its bits with the severity bits to find out.
@@ -387,7 +420,6 @@ class Exceptions {
 	public function exception_handler($exception)
 	{
 		$this->log_exception('error', 'Exception: '.$exception->getMessage(), $exception->getFile(), $exception->getLine());
-		$this->is_cli() OR $this->set_status_header(500);
 		// Should we display the error?
 		if (str_ireplace(array('off', 'none', 'no', 'false', 'null'), '', ini_get('display_errors')))
 		{
