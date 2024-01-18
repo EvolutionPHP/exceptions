@@ -20,8 +20,8 @@
     }
   },
   "require": {
-    "php": ">=8.1",
-    "symfony/error-handler": ">=v6.2.7",
+    "php": ">=8.2",
+    "symfony/error-handler": ">=v7.0.0",
     "evolutionphp/logger":">=1.1"
   }
 }

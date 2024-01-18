@@ -1,10 +1,7 @@
 <?php
 namespace EvolutionPHP\Exceptions;
 use EvolutionPHP\Logger\Log;
-use Symfony\Component\ErrorHandler\Debug;
-use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer;
-use Symfony\Component\ErrorHandler\Exception\FlattenException;
 
 define('EvolutionPHPExceptions', 1);
 
